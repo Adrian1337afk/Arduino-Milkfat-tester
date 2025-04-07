@@ -1,0 +1,82 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+// LCD Setup (Adresse 0x27 für die meisten I2C-Displays)
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// Pin-Definitionen
+const int ledPin = 9;            // Pin für die Power-LED
+const int potPin = A0;           // Pin für das Potentiometer
+const int ldrPin = A1;           // Pin für den Photodetektor (LDR)
+const int buttonPin = 2;         // Pin für den Taster
+
+// Variablen für Messwerte
+int potentiometerValue = 0;      // Wert des Potentiometers (LED-Helligkeit)
+int ldrValue = 0;                // Messwert des Photodetektors
+float fatContent = 0.0;          // Geschätzter Fettgehalt (in Prozent)
+bool buttonPressed = false;      // Status des Tasters
+
+void setup() {
+  // Initialisierung der seriellen Kommunikation
+  Serial.begin(9600);
+
+  // Initialisierung des LCD-Displays
+  lcd.begin(16, 2);
+  lcd.setBacklight(1);            // LCD Hintergrundbeleuchtung einschalten
+  lcd.clear();
+
+  // Setzen des LED-Pins als Ausgang
+  pinMode(ledPin, OUTPUT);
+  
+  // Setzen des Button-Pins als Eingang mit internem Pull-up-Widerstand
+  pinMode(buttonPin, INPUT_PULLUP);
+
+  // Anzeigetext auf dem LCD, um den Benutzer zu informieren
+  lcd.setCursor(0, 0);
+  lcd.print("Druecke zum Starten");
+}
+
+void loop() {
+  // Überprüfe, ob der Knopf gedrückt wurde
+  if (digitalRead(buttonPin) == LOW) {
+    // Wenn der Knopf gedrückt wird, starte die Messung
+    if (!buttonPressed) {
+      buttonPressed = true;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Messung startet...");
+      delay(1000);  // Kurze Pause, um die Nachricht anzuzeigen
+    }
+    
+    // Messung durchführen (wie im ursprünglichen Code)
+    potentiometerValue = analogRead(potPin);
+    int ledBrightness = map(potentiometerValue, 0, 1023, 0, 255);
+    analogWrite(ledPin, ledBrightness);
+
+    ldrValue = analogRead(ldrPin);
+    fatContent = map(ldrValue, 0, 1023, 0, 100);  // Mapping von LDR-Wert auf Fettgehalt (0-100%)
+
+    // Ausgabe der Messwerte auf dem LCD
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Fettgehalt: ");
+    lcd.print(fatContent, 1);    // Anzeige mit 1 Dezimalstelle
+    lcd.print("%");
+
+    // Ausgabe der Messwerte auf dem seriellen Monitor (optional)
+    Serial.print("Potentiometer-Wert: ");
+    Serial.print(potentiometerValue);
+    Serial.print("\tLED Helligkeit: ");
+    Serial.print(ledBrightness);
+    Serial.print("\tLDR-Wert: ");
+    Serial.print(ldrValue);
+    Serial.print("\tFettgehalt: ");
+    Serial.println(fatContent);
+
+    // Eine kurze Pause, um die Anzeige zu stabilisieren
+    delay(1000);
+  } else {
+    // Wenn der Knopf nicht gedrückt wird, weiterhin die "Drücke zum Starten"-Nachricht anzeigen
+    buttonPressed = false;
+  }
+}
