@@ -1,0 +1,59 @@
+#include <LiquidCrystal_I2C.h>
+#include <Wire.h>
+
+LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display. ACHTUNG: Adresse kann auch 0x3F sein !!!
+
+// Anschlüsse:
+// GND - GND
+// VCC - 5V
+// SDA - ANALOG Pin 4
+// SCL - ANALOG pin 5
+
+const int analogInPin = A6;  // Analog input pin that the potentiometer is attached to
+float intensity = 0;           // value read from the photodiode
+
+
+// ===========================
+// =======   SETUP   =========
+// ===========================
+
+void setup()
+   {
+    Serial.begin(9600);
+    
+    lcd.begin();        // initialize the lcd
+    lcd.backlight();
+    lcd.setCursor(0,0);
+    lcd.print("Photometer");
+    lcd.setCursor(0,1);
+    lcd.print("Version 1.0");
+    
+    delay(3000);
+    
+    lcd.setCursor(0,0);
+    lcd.print("             ");
+    lcd.setCursor(0,1);
+    lcd.print("            ");
+    lcd.setCursor(0,0);
+    lcd.print("U_PD = ");
+        
+   }
+
+
+// ===========================
+// =======    LOOP   =========
+// ===========================
+
+void loop()
+   {
+    intensity = analogRead(analogInPin);
+  
+    intensity = (intensity / 1023.0) * 5.0;
+    
+    lcd.setCursor(7,0);
+    lcd.print(intensity,3);
+    lcd.print(" V");
+
+    delay(100);
+    
+   }
