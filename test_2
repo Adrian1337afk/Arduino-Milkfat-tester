@@ -1,0 +1,61 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+// LCD setup
+LiquidCrystal_I2C lcd(0x27, 16, 2); // 0x27 is common for 16x2 I2C
+
+// Pins
+const int ldrPin = A0;
+const int potPin = A1;
+const int buttonPin = 2;
+
+// Variables
+bool testStarted = false;
+
+void setup() {
+  pinMode(buttonPin, INPUT_PULLUP);  // Assuming button goes LOW when pressed
+
+  lcd.init();
+  lcd.backlight();
+
+  lcd.setCursor(0, 0);
+  lcd.print("Milk Fat Tester");
+  lcd.setCursor(0, 1);
+  lcd.print("Press to Start");
+
+  delay(1000);
+}
+
+void loop() {
+  if (digitalRead(buttonPin) == LOW && !testStarted) {
+    testStarted = true;
+    lcd.clear();
+    lcd.print("Testing...");
+    delay(1000);
+
+    int ldrValue = analogRead(ldrPin);
+    int potValue = analogRead(potPin);
+
+    // Normalize to percentages (optional)
+    float fatLevel = map(ldrValue, 0, 1023, 0, 100);
+    float threshold = map(potValue, 0, 1023, 0, 100);
+
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Fat: ");
+    lcd.print(fatLevel, 1);
+    lcd.print("%");
+
+    lcd.setCursor(0, 1);
+    if (fatLevel > threshold) {
+      lcd.print("HIGHER than Set");
+    } else {
+      lcd.print("LOWER than Set");
+    }
+
+    delay(5000); // Show result for 5 seconds
+    testStarted = false;
+    lcd.clear();
+    lcd.print("Press to Start");
+  }
+}
